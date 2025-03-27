@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 [assembly: InternalsVisibleTo("Tests")]
 namespace WeakenedCacheLib;
 
-public partial class WeakenedCache
+public partial class WeakenedCache : IDisposable
 {
   private const byte Priorities           = 3;
   private const byte CollectedCheckLimit  = 100;
@@ -12,13 +12,13 @@ public partial class WeakenedCache
   
   private int _nextExpirableKeyToCheck;
   private int _nextWeakKeyToCheck;
+  private bool _disposed;
   
-  internal Dictionary<object, StrongEntry>[] StrongStorage { get; } = new Dictionary<object, StrongEntry>[Priorities];
-  internal Dictionary<object, WeakEntry> WeakStorage       { get; } = new();
-  internal List<object> WeakKeys                           { get; } = [];
-  internal List<object> ExpirableKeys                      { get; } = [];
-  internal Dictionary<RuntimeTypeHandle, int> TypeSize     { get; } = new();
-  
+  internal Dictionary<object, StrongEntry>[] StrongStorage { get; set; } = new Dictionary<object, StrongEntry>[Priorities];
+  internal Dictionary<object, WeakEntry> WeakStorage       { get; set; } = new();
+  internal List<object> ExpirableKeys                      { get; set; } = [];
+  internal List<object> WeakKeys                           { get; set; } = [];
+
   public WeakenedCache()
   {
     for (var i = 0; i < Priorities; i++)
@@ -182,7 +182,32 @@ public partial class WeakenedCache
 
   ~WeakenedCache()
   {
-    foreach (var weakEntry in WeakStorage)
-      weakEntry.Value.Handle.Free();
+    Dispose(false);
+  }
+
+  public void Dispose()
+  {
+    Dispose(true);
+  }
+  
+  private void Dispose(bool disposing)
+  {
+    if (!_disposed)
+    {
+      foreach (var weakEntry in WeakStorage)
+        weakEntry.Value.Handle.Free();
+      
+      if (disposing)
+      {
+        GC.SuppressFinalize(this);
+
+        StrongStorage = null;
+        WeakStorage = null;
+        ExpirableKeys = null;
+        WeakKeys = null;
+      }
+      
+      _disposed = true;
+    }
   }
 }
