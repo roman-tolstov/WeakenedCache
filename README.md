@@ -16,12 +16,12 @@ cache.Put(Key3, instance3, WeakenedCache.Priority.High);
 ```
 ## Get values
 ``` csharp
-Console.WriteLine((cache.Take(Key1) as SampleRefType).Value);    // 1
+(cache.Take(Key1) as SampleRefType).Value;    // 1
 ``` 
 ## or use generic
 ``` csharp
-Console.WriteLine(cache.Take<SampleRefType>(Key2)?.Value);       // 2 
-Console.WriteLine(cache.Take<SampleRefType>(Key3)?.Value);       // 3
+cache.Take<SampleRefType>(Key2)?.Value;       // 2 
+cache.Take<SampleRefType>(Key3)?.Value;       // 3
 ```
 ## Weaken items of some priorities
 ``` csharp
